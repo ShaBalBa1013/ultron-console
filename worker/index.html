@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101011"><title>ULTRON · Personal console</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101011;color:#f3eeeb;font:16px system-ui,sans-serif}body:before{content:'';position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 20% 30%,#491c2055,transparent 50%),repeating-linear-gradient(0deg,transparent 0 36px,#ffffff05 37px 38px)}main{max-width:1060px;margin:auto;padding:30px 24px;position:relative}header,footer{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #403333;padding:0 0 18px}small,label,.tag{font:12px ui-monospace,monospace;letter-spacing:.14em;color:#d69999}header strong{letter-spacing:.25em}article{display:grid;grid-template-columns:1fr 1.15fr;gap:32px;margin:40px 0}.core{display:grid;justify-items:center;align-content:center;min-height:420px}.orb{width:min(66vw,260px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#4b2224,transparent 69%);border:1px solid #8c4348;outline:1px dashed #724044;outline-offset:11px;box-shadow:0 0 45px #c13f4633;position:relative}.orb:before{content:'';position:absolute;inset:22px;border:1px solid #bf5558;border-radius:50%;box-shadow:inset 0 0 20px #b3444744}.orb svg{width:64%;filter:drop-shadow(0 0 10px #ee5555)}.orb.active{animation:pulse 1s infinite alternate}@keyframes pulse{to{box-shadow:0 0 60px #eb656588}}h1{margin:23px 0 1px;font-size:clamp(42px,8vw,80px);letter-spacing:.14em;line-height:1.1}.panel{border:1px solid #55383a;background:#171415;padding:22px;border-radius:13px;min-width:0}h2{margin:8px 0 14px;font-size:27px}.log{min-height:140px;max-height:270px;overflow:auto;line-height:1.5}.log p{margin:10px 0}.log strong{font:11px ui-monospace,monospace;letter-spacing:.12em;color:#ef9696;display:block}.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}button,input,a.action{font:inherit;border:1px solid #624044;border-radius:8px;padding:10px 12px;color:inherit;background:#211a1c}button,a.action{cursor:pointer}button:hover,a.action:hover{background:#3d262a}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #ff9c9c;outline-offset:2px}input{width:100%;margin-top:7px}form{margin-top:16px}button.primary,a.action{background:#eb8d8d;color:#201215;font-weight:700;text-decoration:none}a.action{display:inline-block;margin-top:7px}footer{border-top:1px solid #403333;border-bottom:0;padding-top:17px;color:#c7adad;font-size:13px}@media(max-width:720px){article{grid-template-columns:1fr;margin-top:16px;gap:14px}.core{min-height:300px}.orb{width:180px}main{padding:20px 15px}}@media(prefers-reduced-motion:reduce){.orb.active{animation:none}}
+</style>
+<main><header><strong>ULTRON</strong><span class="tag">● STANDING BY</span></header>
+<article><section class="core"><div id="orb" class="orb"><svg viewBox="0 0 160 140" fill="none" aria-hidden="true"><path d="M30 30 57 15h46l27 15 9 39-20 41-39 16-39-16-20-41zM42 54l22 7m54-7-22 7M60 92l20 7 20-7M80 25v22" stroke="#f18484" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h1>ULTRON</h1><small>PERSONAL OPERATIONS CONSOLE</small></section>
+<section class="panel"><small>01 / COMMAND CHANNEL</small><h2>What’s the mission?</h2><div class="log" id="log" role="log" aria-live="polite"><p><strong>ULTRON</strong>Online. Tell me what you’re looking for.</p></div>
+<form id="form"><label for="prompt">COMMAND</label><input id="prompt" placeholder="Ask anything or find a place nearby" required maxlength="600" autocomplete="off"><div class="row"><button class="primary" type="submit">Run command</button><button type="button" id="mic">🎙 Speak</button><button type="button" id="voice" aria-pressed="true">Voice on</button></div></form>
+<div class="row"><button type="button" id="loc">Use my location</button><button type="button" id="web">Search the web</button><button type="button" id="italian">Italian nearby</button><button type="button" id="help">What can you do?</button></div></section></article>
+<footer><span>PERSONAL EDITION</span><span>YOU GIVE THE ORDERS.</span></footer></main>
+<script>
+const by=id=>document.getElementById(id), log=by('log'), orb=by('orb'), promptBox=by('prompt');
+let voice=true;
+function add(who,msg){const p=document.createElement('p'), b=document.createElement('strong');b.textContent=who;p.append(b,document.createTextNode(msg));log.append(p);log.scrollTop=log.scrollHeight;return p}
+function speak(msg){if(voice&&window.speechSynthesis&&window.SpeechSynthesisUtterance){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(msg);u.rate=.93;u.pitch=.72;speechSynthesis.speak(u)}}
+function say(msg){const p=add('ULTRON',msg);speak(msg);return p}
+const daytona={lat:29.21,lon:-81.02,label:'Daytona Beach'};
+let area=daytona, request=0, pending;
+const cuisines={italian:'italian|pizza',pizza:'pizza',sushi:'sushi|japanese',mexican:'mexican',chinese:'chinese',thai:'thai',indian:'indian',japanese:'japanese'};
+function mapLink(parent,q,label='Open in Google Maps ↗'){
+ const a=document.createElement('a');a.className='action';a.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);a.target='_blank';a.rel='noopener noreferrer';a.textContent=label;parent.append(document.createElement('br'),a);return a
+}
+const daytonaItalian=[
+ ["Little Italy","240 S Beach St","https://italianrestaurantdaytona.com/"],
+ ["Don Vito’s Italian Restaurant","137 W International Speedway Blvd","https://www.daytonabeach.com/listings/don-vitos-italian-restaurant/1193/"],
+ ["The Cellar","220 Magnolia Ave","https://thecellarrestaurant.com/"]
+];
+function showDaytonaItalian(){
+ say("Three Italian options in Daytona Beach: Little Italy, Don Vito’s, and The Cellar.");
+ for(const [name,address,source] of daytonaItalian){
+  const row=add("DAYTONA BEACH",name+" · "+address);
+  mapLink(row,name+" "+address+" Daytona Beach FL","Directions ↗");
+  const link=document.createElement("a");link.href=source;link.target="_blank";link.rel="noopener noreferrer";link.style.color="inherit";link.textContent="Listing ↗";row.append(document.createTextNode(" "),link)
+ }
+ add("ULTRON","These are local picks. Check the listing for current hours.");
+}
+function distance(lat,lon,origin){
+ const rad=Math.PI/180, a=Math.sin((lat-origin.lat)*rad/2)**2+Math.cos(origin.lat*rad)*Math.cos(lat*rad)*Math.sin((lon-origin.lon)*rad/2)**2;
+ return 3959*2*Math.asin(Math.sqrt(Math.min(1,a)))
+}
+function places(elements,origin){
+ const seen=new Set();
+ return elements.flatMap(e=>{const p=e.center??e,t=e.tags??{};return t.name&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)?[{...t,lat:p.lat,lon:p.lon,mi:distance(p.lat,p.lon,origin)}]:[]})
+ .sort((a,b)=>a.mi-b.mi).filter(p=>{const k=p.name.toLowerCase();if(seen.has(k))return false;seen.add(k);return true}).slice(0,5)
+}
+async function webSearch(q,id){
+ add('ULTRON','Searching the web…');
+ const controller=new AbortController();pending=controller;
+ const timer=setTimeout(()=>controller.abort(),50000);
+ try{
+  const response=await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q}),signal:controller.signal});
+  const data=await response.json();if(id!==request)return;
+  if(!response.ok){say(data.error||'Web search is unavailable right now.');return}
+  const row=add('ULTRON','');
+  const spoken=[];
+  for(const part of data.parts){
+   const chars=Array.from(part.text);let at=0;
+   for(const cite of part.citations){
+    if(cite.end<at||cite.end>chars.length)continue;
+    row.append(document.createTextNode(chars.slice(at,cite.end).join('')));
+    const a=document.createElement('a');a.href=cite.url;a.target='_blank';a.rel='noopener noreferrer';a.style.color='#ffacac';a.textContent=' ['+cite.title+']';row.append(a);at=cite.end;
+   }
+   row.append(document.createTextNode(chars.slice(at).join('')+' '));spoken.push(part.text);
+  }
+  log.scrollTop=log.scrollHeight;speak(spoken.join(' '));
+ }catch{if(id===request)say('Web search didn’t finish. Try again in a moment.')}
+ finally{clearTimeout(timer);if(pending===controller)pending=null}
+}
+async function run(raw,forceWeb=false){const t=raw.trim();if(!t)return;const id=++request;pending?.abort();add('YOU',t);
+ if(forceWeb||/^search (?:the )?web[: ]/i.test(t))return webSearch(t.replace(/^search (?:the )?web[: ]+/i,'')||t,id);
+ if(/^(help|what can you do|commands)[?.!]*$/i.test(t)){say('Ask a question to search the web, or try “Find Italian restaurants near me.” I use Daytona Beach by default. Tap “Use my location” to search closer to you.');return}
+ if(/^(brief me|check my calendar|read my notion|call me)[?.!]*$/i.test(t)){say('This console doesn’t have access to your calendar, Notion, or phone calls yet. You can still ask for your calendar briefing in ChatGPT.');return}
+ if(!/\b(nearby|near me|restaurants?|caf[eé]s?|coffee shops?|pizza places?)\b/i.test(t)&&!/^find (?:sushi|coffee|pizza)\b/i.test(t))return webSearch(t,id);
+ const q=t.replace(/^(?:ultron[,: ]+)?(?:please )?(?:find|search for|look for|show me)\s+(?:me\s+)?/i,'').replace(/[?!]+$/,'').trim()||'restaurants near me';
+ const coffee=/\b(coffee|cafe|cafés?)\b/i.test(q), cuisine=Object.keys(cuisines).find(k=>new RegExp('\\b'+k+'\\b','i').test(q));
+ const named=q.match(/\b(?:in|near|around)\s+(.+)$/i)?.[1]?.trim();
+ if((named&&!/^me\b|^daytona beach\b/i.test(named))||/\b(open now|highest rated|top rated)\b/i.test(q)||(!coffee&&!cuisine&&!/\b(restaurants?|food)\b/i.test(q))){
+  mapLink(say('Google Maps can handle that search. Open it for current details.'),q);return
+ }
+ const origin=/daytona beach/i.test(named??'')?daytona:area;
+ if(origin===daytona&&cuisine==='italian'&&!coffee){showDaytonaItalian();return}
+ const filter=coffee?'["amenity"="cafe"]':cuisine?'["amenity"~"^(restaurant|fast_food)$"]["cuisine"~"(^|;)('+cuisines[cuisine]+')(;|$)"]':'["amenity"="restaurant"]';
+ const query='[out:json][timeout:12];nwr(around:8000,'+origin.lat+','+origin.lon+')'+filter+'["name"];out center;';
+ add('ULTRON','Searching near '+origin.label+'…');
+ const controller=new AbortController();pending=controller;const timer=setTimeout(()=>controller.abort(),16000);
+ const fallback=origin===daytona?q.replace(/\bnear me\b|\bnearby\b/i,'').trim()+(named&&/^daytona beach/i.test(named)?'':' in Daytona Beach'):q;
+ try{
+  const data=await Promise.any(['https://overpass.private.coffee/api/interpreter','https://overpass-api.de/api/interpreter'].map(async endpoint=>{
+   const r=await fetch(endpoint+'?'+new URLSearchParams({data:query}),{signal:controller.signal});
+   if(!r.ok)throw Error('Search unavailable');const payload=await r.json();if(!Array.isArray(payload.elements))throw Error('Invalid listings');return payload;
+  }));controller.abort();if(id!==request)return;
+  const found=places(data.elements??[],origin);
+  if(!found.length){mapLink(say('I didn’t find matching listings near '+origin.label+'. Try Maps for more options.'),fallback);return}
+  say('Closest mapped options near '+origin.label+': '+found.slice(0,3).map(p=>p.name+', '+p.mi.toFixed(1)+' miles away').join('; ')+'.');
+  for(const p of found){const row=add('NEARBY',p.name+' · '+p.mi.toFixed(1)+' mi straight-line');mapLink(row,p.name+' '+p.lat+','+p.lon,'Details and directions ↗')}
+  const p=add('SOURCE','Distances are approximate. Check Maps for current hours. ');const a=document.createElement('a');a.href='https://www.openstreetmap.org/copyright';a.target='_blank';a.rel='noopener noreferrer';a.style.color='inherit';a.textContent='© OpenStreetMap contributors';p.append(a);log.scrollTop=log.scrollHeight;
+ }catch{if(id===request)mapLink(say('The nearby listings service didn’t respond. You can still open the search in Maps.'),fallback)}
+ finally{clearTimeout(timer);if(pending===controller)pending=null}
+}
+by('loc').onclick=()=>{
+ if(area!==daytona){area=daytona;by('loc').textContent='Use my location';add('ULTRON','Search area reset to Daytona Beach.');return}
+ if(!navigator.geolocation){add('ULTRON','Location is unavailable in this browser. Searching Daytona Beach by default.');return}
+ by('loc').disabled=true;
+ navigator.geolocation.getCurrentPosition(({coords})=>{area={lat:+coords.latitude.toFixed(2),lon:+coords.longitude.toFixed(2),label:'your approximate location'};by('loc').disabled=false;by('loc').textContent='Reset to Daytona Beach';add('ULTRON','Approximate location ready for your next search.')},()=>{by('loc').disabled=false;add('ULTRON','Couldn’t get your location. Daytona Beach is still selected.')},{timeout:9000,maximumAge:300000})
+};
+by('form').addEventListener('submit',e=>{e.preventDefault();run(promptBox.value);promptBox.value=''});
+by('web').onclick=()=>{if(!promptBox.reportValidity())return;run(promptBox.value,true);promptBox.value=''};
+by('italian').onclick=()=>run('Find Italian restaurants near me');
+by('help').onclick=()=>run('What can you do?');
+by('voice').onclick=()=>{voice=!voice;by('voice').textContent=voice?'Voice on':'Voice off';by('voice').setAttribute('aria-pressed',voice);if(!voice&&window.speechSynthesis)speechSynthesis.cancel()};
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let listening=false;
+by('mic').onclick=()=>{if(!SR){add('ULTRON','Voice input is unavailable in this browser. You can type or use your keyboard’s dictation.');return}if(listening)return;const rec=new SR();rec.lang='en-US';if(window.speechSynthesis)speechSynthesis.cancel();rec.onstart=()=>{listening=true;orb.classList.add('active');by('mic').textContent='Listening…'};rec.onend=()=>{listening=false;orb.classList.remove('active');by('mic').textContent='🎙 Speak'};rec.onresult=e=>run(e.results[0][0].transcript);rec.onerror=()=>add('ULTRON','Couldn’t capture speech. Check microphone access or type your command.');try{rec.start()}catch{add('ULTRON','Couldn’t start the microphone. Type your command instead.')}};
+</script></html>
